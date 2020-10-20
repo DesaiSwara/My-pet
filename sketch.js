@@ -1,4 +1,5 @@
 var dog,dogImg, happyDog,happyDogImg,database,foodS=0,foodStock;
+var feedPet,addFood,fedTime,lastFed,foodObj;
 
 function preload()
 {
@@ -8,6 +9,7 @@ function preload()
 
 function setup() {
   createCanvas(750, 650);
+  foodObj=new Food (50,50,200,200); 
   database = firebase.database();
   console.log(database);
   
@@ -15,7 +17,13 @@ function setup() {
   dog.addImage(dogImg);
   dog.scale=0.5;
 
-  
+  feed=createButton("Feed the dog");
+  feed.position(700,95);
+  feed.mousePressed(feedDog);
+
+  addFood=createButton("Add Food");
+  addFood.position(800,95);
+  addFood.mousePressed(addFoods);
 
   foodStock=database.ref('Food');
   foodStock.on("value",readStock);
@@ -25,11 +33,20 @@ function setup() {
 function draw() { 
   background(46, 139, 87); 
 
-  if(keyWentDown(UP_ARROW)){
-    writeStock(foodS);
-    dog.addImage(happyDogImg);
-  }
+  fedTime=database.ref('fedTime');
+  fedTime.on("value",function(data){
+    lastFed=data.val();
+  })
+
   drawSprites();
+
+  fill(255,255,254);
+  textSize(15);
+  if(lastFes>=12) {
+    text("Last Feed : 12 AM",350,30);
+}else {
+  text("Last Feed : "+lastFed + "AM",350,30);
+}
 
   textSize(12);
   fill("white");
