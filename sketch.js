@@ -1,126 +1,67 @@
-const Engine = Matter.Engine;
-const World= Matter.World;
-const Bodies = Matter.Bodies;
-const Constraint = Matter.Constraint;
-const Events = Matter.Events
+var dogImg, happyDogImg, dog, database, foodS, foodStock, canvas, lastFed, fedTime, foodObj, feed, addFood, food1, foodCount, input, milk, milkImg;
 
-var particles = [];
-var plinkos = [];
-var divisions =[];
-var particle;
-
-var divisionHeight=300;
-var score =0;
-var count = 0;
-var gameState ="start";
+function preload() {
+  dogImg = loadImage('dogImg.png');
+  happyDogImg = loadImage('dogImg1.png');
+  milkImg = loadImage('images/Milk.png');
+}
 
 function setup() {
-  createCanvas(800, 800);
-  engine = Engine.create();
-  world = engine.world;
-  ground = new Ground(width/2,height,width,20);
+  database = firebase.database();
 
-   for (var k = 0; k <=width; k = k + 80) {
-     divisions.push(new Division(k, height-divisionHeight/2, 10, divisionHeight));
-   }
-    for (var j = 30; j <=width; j=j+50) {
-       plinkos.push(new Plinko(j,75));
-    }
+  dog = createSprite(650, 250);
+  dog.scale = 0.3;
+  dog.addImage(dogImg);
 
-    for (var j = 50; j <=width-10; j=j+50) {
-        plinkos.push(new Plinko(j,175));
-    }
-
-    for (var j = 30; j <=width; j=j+50) {
-        plinkos.push(new Plinko(j,275));
-    }
-
-    for (var j = 50; j <=width-10; j=j+50) {
-        plinkos.push(new Plinko(j,375));
-    }
-    
-}
- 
-function draw() {
-  background("black");
-  textSize(35)
-  text("Score : "+score,20,40);
-  fill("white");
-  //text(mouseX + "," + mouseY, 20, 50);
-  textSize(35)
-  text(" 500 ", 5, 550);
-  text(" 200 ", 80, 550);
-  text(" 100 ", 160, 550);
-  text(" 500 ", 240, 550);
-  text(" 200 ", 320, 550);
-  text(" 100 ", 400, 550);
-  text(" 500 ", 480, 550);
-  text(" 200 ", 560, 550);
-  text(" 100 ", 640, 550);
-  text(" 500 ", 720, 550);
-  Engine.update(engine);
-  ground.display();
+  milk = createSprite(565, 300);
+  milk.addImage(milkImg);
+  milk.scale = 0.1;
+  milk.visible = false;
+  milk.rotation = 55;
   
-  if ( gameState =="end") {
-    
-    textSize(100);
-    text("GameOver", 150, 250);
-    //return
+  food1 = new Food();
+  
+  food1.start();
+
+  addFood = createButton("Add food");
+  addFood.position(370, 45);
+  addFood.mousePressed(addFoods);
+
+  input = createInput("Your Dog's Name");
+  input.position(150, 70);
+
+  feed = createButton("Feed your Dog");
+  feed.position(450, 45);
+  feed.mousePressed(feedDog);
+
+  canvas = createCanvas(800, 400);
+}
+
+function draw() {  
+  background(46, 139, 87);
+
+  food1.display();
+
+  drawSprites();
+}
+
+function feedDog() {
+  food1.getFoodStock();
+  food1.updateFedTime();
+
+  if(foodCount === 0) {
+    foodCount = 0;
+    milk.visible = false;
+    dog.addImage(dogImg);
+  } else {
+    food1.updateFoodStock(foodCount - 1);
+    milk.visible = true;
+    dog.addImage(happyDogImg);
   }
-
-  
-
-  
-
-for (var i = 0; i < plinkos.length; i++) {
-    plinkos[i].display();  
-}
- 
-if(particle!=null) {
-    particle.display();
-        
-        if (particle.body.position.y>760)
-        {
-              if (particle.body.position.x < 300) 
-              {
-                  score=score+500;      
-                  particle=null;
-                  if ( count>= 5) gameState ="end";                          
-              }
-
-
-              else if (particle.body.position.x < 600 && particle.body.position.x > 301 ) 
-              {
-                    score = score + 100;
-                    particle=null;
-                    if ( count>= 5) gameState ="end";
-
-              }
-              else if (particle.body.position.x < 900 && particle.body.position.x > 601 )
-              {
-                    score = score + 200;
-                    particle=null;
-                    if ( count>= 5)  gameState ="end";
-
-              }      
-              
-        }
-  
-      }
-
-   for (var k = 0; k < divisions.length; k++) 
-   {
-     divisions[k].display();
-   }
- 
 }
 
+function addFoods() {
+ food1.getFoodStock();
 
-function mousePressed()
-{
-  if(gameState!=="end")
-  {
-      count++;
-     particle=new Particle(mouseX, 10, 10, 10); 
-  }   
+ food1.updateFoodStock(foodCount + 1); 
 }
