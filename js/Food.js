@@ -1,43 +1,71 @@
 class Food {
-  constructor(){
-  this.foodStock=0;
-  this.lastFed;
-  this.image=loadImage("Milk.png");
+  constructor() {
+      this.image = loadImage("images/Milk.png");
+  }
+  
+  getFoodStock() {
+      var foodStockRef = database.ref('food');
+      foodStockRef.on("value", (data)=>{
+      foodCount = data.val();
+      });
   }
 
- updateFoodStock(foodStock){
-  this.foodStock=foodStock;
- }
-
- getFedTime(lastFed){
-   this.lastFed=lastFed;
- }
-
- deductFood(){
-   if(this.foodStock>0){
-    this.foodStock=this.foodStock-1;
-   }
+  updateFoodStock(foodStockToUpdate) {
+      database.ref('/').update({
+          food: foodStockToUpdate
+      });
   }
 
-  getFoodStock(){
-    return this.foodStock;
+  getFedTime() {
+      fedTime = database.ref('lastFed');
+      fedTime.on("value", (data)=>{
+          lastFed = data.val();
+      });
   }
 
-  display(){
-    var x=80,y=100;
-    
-    imageMode(CENTER);
-    image(this.image,720,220,70,70);
-    
-    if(this.foodStock!=0){
-      for(var i=0;i<this.foodStock;i++){
-        if(i%10==0){
-          x=80;
-          y=y+50;
-        }
-        image(this.image,x,y,50,50);
-        x=x+30;
+  updateFedTime() {
+      database.ref('/').update({
+          lastFed: hour()
+      });
+  }
+
+  async start(){
+      var foodRef = await database.ref('food').once("value");
+      if(foodRef.exists()) {
+          foodCount = foodRef.val();
       }
+
+      var lastFed = await database.ref('lastFed').once("value");
+      if(lastFed.exists()) {
+          fedTime = lastFed.val();
+      }
+
     }
+
+  display() {
+      textSize(15);
+      fill("white");
+      stroke(5);
+      if(fedTime >= 12) {
+          text("Last Feed: " + fedTime % 12 + " PM", 150, 60);
+      } else if(fedTime === 0){
+          text("Last Feed: 12 AM", 150, 60);
+      } else {
+          text("Last Feed: " + fedTime + " AM", 150, 60);
+      }
+
+      var x = 80, y = 100;
+      imageMode(CENTER);
+      if(foodCount != 0) {
+          for(var i = 0; i < foodCount; i++) {
+              if(i % 10 === 0) {
+                  x = 80;
+                  y = y + 50;
+              }
+              image(milkImg, x, y, 50, 50);
+              x = x + 30;
+          }
+      }
   }
+
 }

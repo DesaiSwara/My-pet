@@ -1,99 +1,126 @@
-var dog,dogImg, happyDog,happyDogImg,database,foodS=0,foodStock;
-var feedPet,addFood,fedTime,lastFed,milk,addFoodS;
-var foodObj;
+const Engine = Matter.Engine;
+const World= Matter.World;
+const Bodies = Matter.Bodies;
+const Constraint = Matter.Constraint;
+const Events = Matter.Events
 
-function preload()
-{
-  dogImg=loadImage("dogImg.png")
-  happyDogImg=loadImage("dogImg1.png");
-}
+var particles = [];
+var plinkos = [];
+var divisions =[];
+var particle;
+
+var divisionHeight=300;
+var score =0;
+var count = 0;
+var gameState ="start";
 
 function setup() {
-  database = firebase.database();
-  createCanvas(800, 700);
-  foodObj=new Food (50,50,200,200); 
+  createCanvas(800, 800);
+  engine = Engine.create();
+  world = engine.world;
+  ground = new Ground(width/2,height,width,20);
 
-  var title=createElement('h2');
-        title.html("Virtual Pet");
-        title.position(500,0);
-        var input=createInput("Name");
-        var button=createButton("Play");
-      
-        input.position(500,50);
-        button.position(500,100);
-        button.mousePressed(function(){
-            input.position(500,440)
-;            button.hide();
-            
-        }) 
-  
-  dog=createSprite(200,200,50,50);
-  dog.addImage(dogImg);
-  dog.scale=0.5;
+   for (var k = 0; k <=width; k = k + 80) {
+     divisions.push(new Division(k, height-divisionHeight/2, 10, divisionHeight));
+   }
+    for (var j = 30; j <=width; j=j+50) {
+       plinkos.push(new Plinko(j,75));
+    }
 
-  feed=createButton("Feed the dog");
-  feed.position(700,95);
-  feed.mousePressed(feedDog);
+    for (var j = 50; j <=width-10; j=j+50) {
+        plinkos.push(new Plinko(j,175));
+    }
 
-  addFood=createButton("Add Food");
-  addFood.position(800,95);
-  addFood.mousePressed(addFoodS);
+    for (var j = 30; j <=width; j=j+50) {
+        plinkos.push(new Plinko(j,275));
+    }
 
-  foodStock=database.ref('Food');
-  foodStock.on("value",readStock);
+    for (var j = 50; j <=width-10; j=j+50) {
+        plinkos.push(new Plinko(j,375));
+    }
+    
 }
+ 
+function draw() {
+  background("black");
+  textSize(35)
+  text("Score : "+score,20,40);
+  fill("white");
+  //text(mouseX + "," + mouseY, 20, 50);
+  textSize(35)
+  text(" 500 ", 5, 550);
+  text(" 200 ", 80, 550);
+  text(" 100 ", 160, 550);
+  text(" 500 ", 240, 550);
+  text(" 200 ", 320, 550);
+  text(" 100 ", 400, 550);
+  text(" 500 ", 480, 550);
+  text(" 200 ", 560, 550);
+  text(" 100 ", 640, 550);
+  text(" 500 ", 720, 550);
+  Engine.update(engine);
+  ground.display();
+  
+  if ( gameState =="end") {
+    
+    textSize(100);
+    text("GameOver", 150, 250);
+    //return
+  }
 
-
-function draw() { 
-  background(46, 139, 87); 
-  foodObj.display();
   
 
-  fedTime=database.ref('fedTime');
-  fedTime.on("value",function(data){
-    lastFed=data.val();
-  })
+  
 
-  fill(255,255,254);
-  textSize(15);
-  if(lastFed>=12){
-    text("Last Feed : "+ lastFed%12 + " PM", 350,30);
-   }else if(lastFed==0){
-     text("Last Feed : 12 AM",350,30);
-   }else{
-     text("Last Feed : "+ lastFed + " AM", 350,30);
+for (var i = 0; i < plinkos.length; i++) {
+    plinkos[i].display();  
+}
+ 
+if(particle!=null) {
+    particle.display();
+        
+        if (particle.body.position.y>760)
+        {
+              if (particle.body.position.x < 300) 
+              {
+                  score=score+500;      
+                  particle=null;
+                  if ( count>= 5) gameState ="end";                          
+              }
+
+
+              else if (particle.body.position.x < 600 && particle.body.position.x > 301 ) 
+              {
+                    score = score + 100;
+                    particle=null;
+                    if ( count>= 5) gameState ="end";
+
+              }
+              else if (particle.body.position.x < 900 && particle.body.position.x > 601 )
+              {
+                    score = score + 200;
+                    particle=null;
+                    if ( count>= 5)  gameState ="end";
+
+              }      
+              
+        }
+  
+      }
+
+   for (var k = 0; k < divisions.length; k++) 
+   {
+     divisions[k].display();
    }
  
-  fill("white");
-  textSize(12);
-  text("Food remaining :" +foodS,550,30);
-
-  drawSprites();
-}
-
-function readStock(data) {
-   foodS=data.val();
-   foodObj.updateFoodStock(foodS)
 }
 
 
-
-function addFoodS(){
-  foodS++;
-  database.ref('/').update({
-    Food:foodS
-  })
+function mousePressed()
+{
+  if(gameState!=="end")
+  {
+      count++;
+     particle=new Particle(mouseX, 10, 10, 10); 
+  }   
 }
-
-function feedDog(){
-  dog.addImage(happyDogImg);
-
-  foodObj.updateFoodStock(foodObj.getFoodStock()-1);
-  database.ref('/').update({
-    Food:foodObj.getFoodStock(),
-    FeedTime:hour()
-  })
-}
-
-  
-  
