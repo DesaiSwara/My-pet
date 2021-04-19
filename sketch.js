@@ -1,67 +1,130 @@
-var dogImg, happyDogImg, dog, database, foodS, foodStock, canvas, lastFed, fedTime, foodObj, feed, addFood, food1, foodCount, input, milk, milkImg;
+var database;
+var dog,dogImage,dogImage1,food,foodImage,foodStock,foodRef;
 
-function preload() {
-  dogImg = loadImage('dogImg.png');
-  happyDogImg = loadImage('dogImg1.png');
-  milkImg = loadImage('images/Milk.png');
+function preload()
+{
+  //load images here
+  backgroundImg = loadImage("bg.jpg");
+  dogImage = loadImage("Dog.png");
+  dogImage1 = loadImage("happydog.png");
+  foodImage = loadImage("Milk.png");
+  bathImage = loadImage("Wash Room.png");
+  sleepImage = loadImage("Bed Room.png");
+  playImage = loadImage("Living Room.png");
+  walkImage = loadImage("running.png");
+  
+
 }
 
 function setup() {
+  createCanvas(480, 480);
+
+  //Sprites
+
+  food = createSprite(90,410,50,50);
+  food.addImage(foodImage);
+  food.scale = 0.15;
+
+
+  dog = createSprite(250,250);
+  dog.addImage(dogImage);
+  dog.scale = 0.35;
+
+  //Firebase
   database = firebase.database();
 
-  dog = createSprite(650, 250);
-  dog.scale = 0.3;
-  dog.addImage(dogImg);
+  //Reference for food
+  foodRef = database.ref("Food");
+  foodRef.on("value",read,console.log("error"));
 
-  milk = createSprite(565, 300);
-  milk.addImage(milkImg);
-  milk.scale = 0.1;
-  milk.visible = false;
-  milk.rotation = 55;
-  
-  food1 = new Food();
-  
-  food1.start();
+  foodRef.set(20);
 
-  addFood = createButton("Add food");
-  addFood.position(370, 45);
-  addFood.mousePressed(addFoods);
 
-  input = createInput("Your Dog's Name");
-  input.position(150, 70);
-
-  feed = createButton("Feed your Dog");
-  feed.position(450, 45);
-  feed.mousePressed(feedDog);
-
-  canvas = createCanvas(800, 400);
 }
+
 
 function draw() {  
-  background(46, 139, 87);
-
-  food1.display();
-
+  background(backgroundImg);
   drawSprites();
-}
+  
+  //add styles here
+  textSize(27);
+  stroke("fuchsia");
+  strokeWeight(0);
+  fill("fuchsia");
+  text("Bottles in the Stock: "+foodStock,130,430);
+  textSize(20);
+  fill("fuchsia");
+  strokeWeight(0);
+    text("Press up arrow key - Feeding, space- Running ",50,40);
+    text("Press right arrow key - Playing, left arrow key- Sleeping ",20,70);
+    text("Press down arrow key - Washroom ",100,100);
 
-function feedDog() {
-  food1.getFoodStock();
-  food1.updateFedTime();
-
-  if(foodCount === 0) {
-    foodCount = 0;
-    milk.visible = false;
-    dog.addImage(dogImg);
-  } else {
-    food1.updateFoodStock(foodCount - 1);
-    milk.visible = true;
-    dog.addImage(happyDogImg);
+  decreaseFood();
+  if(foodStock===0){
+    foodStock = 20;
   }
+
+  if(keyWentUp(DOWN_ARROW)){
+    
+    dog.addImage(bathImage);
+    dog.scale = 0.98;
+    
+    
+  }
+
+  if(keyWentUp(LEFT_ARROW)){
+   
+    dog.addImage(sleepImage);
+    dog.scale = 1.1
+    
+    
+  }
+
+  if(keyWentUp(RIGHT_ARROW)){
+   
+    dog.addImage(playImage);
+    dog.scale = 1
+    dog.x = 250-10;
+    dog.y = 250-80;
+    
+    
+  }
+
+  if(keyCode === 32){
+    
+    dog.addImage(walkImage);
+    dog.scale = 0.45
+ }
+
 }
 
-function addFoods() {
- food1.getFoodStock();
+function read(data){
+  foodStock = data.val();
+}
 
- food1.updateFoodStock(foodCount + 1); 
+function decreaseFood(){
+  if(keyWentDown(UP_ARROW)){
+  foodRef = database.ref("Food");
+  foodStock = foodStock - 1;
+  foodRef.set(foodStock);
+  dog.addImage(dogImage1);
+  
+  dog.scale = 0.35;
+ 
+
+  }
+  
+  if(keyWentUp(UP_ARROW)){
+    
+    foodStock = foodStock;
+    dog.addImage(dogImage);
+    fill("yellow");
+
+    dog.scale = 0.35;
+    food.x = 90;
+    food.y = 410;
+    food.scale = 0.15;
+    
+  }
 }
